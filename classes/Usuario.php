@@ -43,13 +43,10 @@ class Usuario {
 
         // valida se o results tem pelo menos um índice
         if(count($results) > 0){
-            $row = $results[0];
 
             // cada chave sendo setada com seu respectivo valor
-            $this->setIdusuario($row['idusuario']);
-            $this->setDeslogin($row['deslogin']);
-            $this->setDessenha($row['dessenha']);
-            $this->setDtcadastro(new DateTime($row['dtcadastro']));
+            // na função setData()
+            $this->setData($results[0]);
         }
         // interessante notar que essa função não tem nenhum retorno,
         // apenas está carregando os dados do parametro para o objeto
@@ -78,17 +75,56 @@ class Usuario {
         ));
 
         if(count($results) > 0){
-            $row = $results[0];
 
-            $this->setIdusuario($row['idusuario']);
-            $this->setDeslogin($row['deslogin']);
-            $this->setDessenha($row['dessenha']);
-            $this->setDtcadastro(new DateTime($row['dtcadastro']));
+            $this->setData($results[0]);
 
         } else {
             throw new Exception("Login e/ou senha inválidos.");
         }
     }
+
+    public function setData($data){
+        $this->setIdusuario($data['idusuario']);
+        $this->setDeslogin($data['deslogin']);
+        $this->setDessenha($data['dessenha']);
+        $this->setDtcadastro(new DateTime($data['dtcadastro']));
+    }
+
+    public function insert(){
+        $sql = new Sql();
+
+        // a palavra "call" varia de acordo com o banco de dados.
+        // as variaveis dentro das procedures são criadas com a
+        // letra inicial p, por convenção (p de parameter)
+        // com letra v é para variáveis.
+        // caso não haja uma letra inicial, a referencia é ao campo da tabela
+        $results = $sql->select("CALL sp_usuarios_insert(:LOGIN, :PASSWORD)", array(
+            ':LOGIN'=>$this->getDeslogin(),
+            ':PASSWORD'=>$this->getDessenha()
+        ));
+
+        if(count($results) > 0){
+            $this->setData($results[0]);
+        }
+    }
+
+    public function update($login, $password){
+        $this->setDeslogin($login);
+        $this->setDessenha($password);
+
+        $sql = new Sql();
+
+        $sql->query("UPDATE tb_usuarios SET deslogin = :LOGIN, dessenha = :PASSWORD WHERE idusuarios = :ID", array(
+            ':LOGIN'=>$this->getDeslogin(),
+            ':PASSWORD'=>$this->getDessenha(),
+            ':ID'=>$this->getIdusuario()
+        ));
+    }
+
+    public function __construct($login = "", $password = ""){
+        $this->setDeslogin($login);
+        $this->setDessenha($password);
+    }   
 
     public function __toString(){
         return json_encode(array(

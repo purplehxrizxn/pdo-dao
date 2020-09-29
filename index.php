@@ -45,7 +45,7 @@ require_once("config.php");
 // echo $usuario;
 
 
-
+// deleta um usuario
 $usuario = new Usuario();
 
 $usuario->loadById(4);
